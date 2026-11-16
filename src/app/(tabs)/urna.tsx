@@ -7,6 +7,8 @@ import {
   Image,
   TouchableOpacity,
   Alert,
+  Platform,
+  Vibration,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams } from 'expo-router';
@@ -73,8 +75,36 @@ export default function TelaUrna() {
     };
   }, [digitos, cargo, votouEmBranco, qtdDigitos]);
 
+  const tocarSinalUrna = () => {
+    try {
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.frequency.setValueAtTime(800, ctx.currentTime);
+          osc.frequency.setValueAtTime(1400, ctx.currentTime + 0.12);
+          osc.start(ctx.currentTime);
+          osc.stop(ctx.currentTime + 0.5);
+        }
+      } else {
+        Vibration.vibrate([0, 80, 40, 200]);
+      }
+    } catch {
+      // ignora se a plataforma não permitir som/vibração
+    }
+  };
+
   const digitar = (num: string) => {
     if (telaFim) return;
+    try {
+      Vibration.vibrate(20);
+    } catch {
+      // continua normal
+    }
     if (votouEmBranco) {
       setVotouEmBranco(false);
     }
@@ -145,6 +175,7 @@ export default function TelaUrna() {
       const novoTotal = await storageService.getTotalVotosSimulados();
       setTotalVotos(novoTotal);
 
+      tocarSinalUrna();
       setTelaFim(true);
 
       // Reinicia visor apos 3.5 segundos

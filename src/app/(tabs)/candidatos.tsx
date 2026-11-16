@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -64,6 +65,7 @@ export default function TelaCandidatos() {
 
   const aoPuxar = () => {
     setRecarregando(true);
+    api.limparCache();
     buscarCandidatos(false);
   };
 
@@ -76,6 +78,14 @@ export default function TelaCandidatos() {
     setLadoSelecionado('Todos');
     setCargoSelecionado('Todos');
   };
+
+  const ladosOpcoes: (LadoPolitico | 'Todos')[] = [
+    'Todos',
+    'Esquerda',
+    'Centro-Esquerda',
+    'Centro',
+    'Direita',
+  ];
 
   const listaFiltrada = useMemo(() => {
     const termo = textoBusca.trim().toLowerCase();
@@ -98,7 +108,7 @@ export default function TelaCandidatos() {
       <SafeAreaView style={styles.telaCentro}>
         <ActivityIndicator size="large" color="#C8102E" />
         <Text style={styles.tituloCarregando}>Carregando candidatos...</Text>
-        <Text style={styles.subCarregando}>Buscando os registros de Minas Gerais</Text>
+        <Text style={styles.subCarregando}>Buscando os registros da API oficial de Minas Gerais</Text>
       </SafeAreaView>
     );
   }
@@ -142,7 +152,7 @@ export default function TelaCandidatos() {
         <View style={styles.grupoFiltro}>
           <Text style={styles.rotulo}>Lado Político:</Text>
           <View style={styles.linhaChips}>
-            {(['Todos', 'Esquerda', 'Centro', 'Direita'] as const).map((item) => {
+            {ladosOpcoes.map((item) => {
               const ativo = ladoSelecionado === item;
               return (
                 <TouchableOpacity
@@ -199,6 +209,10 @@ export default function TelaCandidatos() {
             }}
           />
         )}
+        initialNumToRender={12}
+        maxToRenderPerBatch={15}
+        windowSize={7}
+        removeClippedSubviews={Platform.OS !== 'web'}
         contentContainerStyle={styles.lista}
         refreshControl={
           <RefreshControl

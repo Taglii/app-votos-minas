@@ -84,7 +84,7 @@ export const CandidateCard: React.FC<Props> = ({
           <Ionicons name="people-outline" size={14} color="#6B7280" />
           <Text style={styles.textoVotos}>{votosFormatados} votos</Text>
         </View>
-        <Badge tipo="eleito" valor={candidato.eleito} tamanho="pequeno" />
+        <Badge tipo="eleito" valor={candidato.situacao || candidato.eleito} tamanho="pequeno" />
       </View>
     </TouchableOpacity>
   );

@@ -130,7 +130,7 @@ export default function TelaDetalhesCandidato() {
           <View style={styles.linhaTags}>
             <Badge tipo="cargo" valor={candidato.cargo} tamanho="medio" />
             <Badge tipo="lado" valor={candidato.ladoPolitico} tamanho="medio" />
-            <Badge tipo="eleito" valor={candidato.eleito} tamanho="medio" />
+            <Badge tipo="eleito" valor={candidato.situacao || (candidato.eleito ? 'ELEITO' : 'NÃO ELEITO')} tamanho="medio" />
           </View>
 
           <TouchableOpacity

@@ -4,7 +4,7 @@ import { Cargo, LadoPolitico } from '@/types/candidato';
 
 interface Props {
   tipo: 'lado' | 'cargo' | 'eleito';
-  valor: LadoPolitico | Cargo | boolean;
+  valor: LadoPolitico | Cargo | boolean | string;
   tamanho?: 'pequeno' | 'medio';
 }
 
@@ -14,19 +14,25 @@ export const Badge: React.FC<Props> = ({ tipo, valor, tamanho = 'pequeno' }) => 
   let texto = '#374151';
 
   if (tipo === 'lado') {
-    rotulo = valor as LadoPolitico;
+    rotulo = String(valor);
     if (rotulo === 'Esquerda') {
       fundo = '#FEE2E2';
       texto = '#DC2626';
+    } else if (rotulo === 'Centro-Esquerda') {
+      fundo = '#FCE7F3';
+      texto = '#BE185D';
     } else if (rotulo === 'Centro') {
       fundo = '#EDE9FE';
       texto = '#7C3AED';
+    } else if (rotulo === 'Centro-Direita') {
+      fundo = '#E0F2FE';
+      texto = '#0369A1';
     } else if (rotulo === 'Direita') {
       fundo = '#DBEAFE';
       texto = '#2563EB';
     }
   } else if (tipo === 'cargo') {
-    rotulo = valor as Cargo;
+    rotulo = String(valor);
     if (rotulo === 'Governador') {
       fundo = '#DCFCE7';
       texto = '#15803D';
@@ -38,10 +44,23 @@ export const Badge: React.FC<Props> = ({ tipo, valor, tamanho = 'pequeno' }) => 
       texto = '#0F766E';
     }
   } else if (tipo === 'eleito') {
-    const eleito = Boolean(valor);
-    rotulo = eleito ? 'ELEITO' : 'NÃO ELEITO';
-    fundo = eleito ? '#D1FAE5' : '#F3F4F6';
-    texto = eleito ? '#065F46' : '#6B7280';
+    if (typeof valor === 'boolean') {
+      rotulo = valor ? 'ELEITO' : 'NÃO ELEITO';
+      fundo = valor ? '#D1FAE5' : '#F3F4F6';
+      texto = valor ? '#065F46' : '#6B7280';
+    } else {
+      rotulo = String(valor).toUpperCase();
+      if (rotulo.includes('ELEITO') && !rotulo.includes('NÃO')) {
+        fundo = '#D1FAE5';
+        texto = '#065F46';
+      } else if (rotulo.includes('SUPLENTE')) {
+        fundo = '#FEF3C7';
+        texto = '#B45309';
+      } else {
+        fundo = '#F3F4F6';
+        texto = '#6B7280';
+      }
+    }
   }
 
   const ehPequeno = tamanho === 'pequeno';

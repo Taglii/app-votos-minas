@@ -64,10 +64,8 @@ voto-minas/
 │   │   ├── Badge.tsx                # Badges estilizados (Cargo, Lado, Eleito)
 │   │   ├── CandidateCard.tsx        # Card reutilizável na lista e favoritos
 │   │   └── UrnaTeclado.tsx          # Teclado realista da urna (0-9, BRANCO, CORRIGE, CONFIRMA)
-│   ├── data/
-│   │   └── candidatosMock.ts        # Base mockada de candidatos de Minas Gerais
 │   ├── services/
-│   │   ├── api.ts                   # Camada de requisições assíncronas simuladas
+│   │   ├── api.ts                   # Camada de comunicação com a API do Gist (785 candidatos)
 │   │   └── storage.ts               # Persistência via @react-native-async-storage
 │   └── types/
 │       └── candidato.ts             # Tipos TypeScript do domínio eleitoral
@@ -82,6 +80,7 @@ voto-minas/
 - **Expo Router** (Roteamento baseado em arquivos com Stack e Bottom Tabs)
 - **TypeScript** (Tipagem estrita e validação total)
 - **@react-native-async-storage/async-storage** (Armazenamento local offline)
+- **API Externa de Dados Reais de MG** (GitHub Gist com 785 candidatos do TRE-MG)
 - **@expo/vector-icons** (Ionicons)
 - **React Native Safe Area Context**
 

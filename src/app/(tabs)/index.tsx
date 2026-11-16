@@ -62,6 +62,7 @@ export default function TelaInicio() {
 
   const puxarAtualizar = () => {
     setAtualizando(true);
+    api.limparCache();
     carregarDados();
   };
 
@@ -70,9 +71,13 @@ export default function TelaInicio() {
   const totalSenadores = candidatos.filter((c) => c.cargo === 'Senador').length;
   const totalDeputados = candidatos.filter((c) => c.cargo === 'Deputado Federal').length;
 
-  const totalEsquerda = candidatos.filter((c) => c.ladoPolitico === 'Esquerda').length;
-  const totalCentro = candidatos.filter((c) => c.ladoPolitico === 'Centro').length;
-  const totalDireita = candidatos.filter((c) => c.ladoPolitico === 'Direita').length;
+  const ladosDisponiveis: (LadoPolitico | 'Todos')[] = [
+    'Todos',
+    'Esquerda',
+    'Centro-Esquerda',
+    'Centro',
+    'Direita',
+  ];
 
   // Filtro rapido para exibir os destaques no painel
   const listaFiltrada = candidatos.filter((c) => {
@@ -109,14 +114,14 @@ export default function TelaInicio() {
           {carregando ? (
             <View style={styles.carregandoRow}>
               <ActivityIndicator size="small" color="#C8102E" />
-              <Text style={styles.carregandoTexto}>Carregando dados...</Text>
+              <Text style={styles.carregandoTexto}>Carregando dados da API...</Text>
             </View>
           ) : (
             <View style={styles.gridEstatisticas}>
               <View style={[styles.cardStat, styles.cardVermelho]}>
                 <Ionicons name="people" size={22} color="#C8102E" />
                 <Text style={styles.numeroStat}>{candidatos.length}</Text>
-                <Text style={styles.legendaStat}>Candidatos em MG</Text>
+                <Text style={styles.legendaStat}>Candidatos na API</Text>
               </View>
 
               <View style={[styles.cardStat, styles.cardVerde]}>
@@ -190,8 +195,9 @@ export default function TelaInicio() {
 
           <Text style={styles.rotuloFiltro}>Espectro político:</Text>
           <View style={styles.linhaChips}>
-            {(['Todos', 'Esquerda', 'Centro', 'Direita'] as const).map((item) => {
+            {ladosDisponiveis.map((item) => {
               const ativo = filtroLado === item;
+              const contagem = item === 'Todos' ? candidatos.length : candidatos.filter((c) => c.ladoPolitico === item).length;
               return (
                 <TouchableOpacity
                   key={item}
@@ -199,7 +205,7 @@ export default function TelaInicio() {
                   onPress={() => setFiltroLado(item)}
                 >
                   <Text style={[styles.txtChip, ativo && styles.txtChipAtivo]}>
-                    {item} {item === 'Esquerda' ? `(${totalEsquerda})` : item === 'Centro' ? `(${totalCentro})` : item === 'Direita' ? `(${totalDireita})` : ''}
+                    {item} ({contagem})
                   </Text>
                 </TouchableOpacity>
               );
@@ -443,7 +449,7 @@ const styles = StyleSheet.create({
     borderColor: '#C8102E',
   },
   txtChip: {
-    fontSize: 12,
+    fontSize: 11.5,
     color: '#4B5563',
     fontWeight: '600',
   },
