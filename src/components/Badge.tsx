@@ -33,7 +33,10 @@ export const Badge: React.FC<Props> = ({ tipo, valor, tamanho = 'pequeno' }) => 
     }
   } else if (tipo === 'cargo') {
     rotulo = String(valor);
-    if (rotulo === 'Governador') {
+    if (rotulo === 'Presidente') {
+      fundo = '#EEF2FF';
+      texto = '#4338CA';
+    } else if (rotulo === 'Governador') {
       fundo = '#DCFCE7';
       texto = '#15803D';
     } else if (rotulo === 'Senador') {
@@ -42,6 +45,9 @@ export const Badge: React.FC<Props> = ({ tipo, valor, tamanho = 'pequeno' }) => 
     } else if (rotulo === 'Deputado Federal') {
       fundo = '#CCFBF1';
       texto = '#0F766E';
+    } else if (rotulo === 'Deputado Estadual') {
+      fundo = '#F3E8FF';
+      texto = '#7E22CE';
     }
   } else if (tipo === 'eleito') {
     if (typeof valor === 'boolean') {

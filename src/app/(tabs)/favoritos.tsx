@@ -126,7 +126,16 @@ export default function TelaFavoritos() {
           <View style={styles.secaoFiltro}>
             <Text style={styles.rotuloFiltro}>Filtrar Cargo:</Text>
             <View style={styles.linhaChips}>
-              {(['Todos', 'Governador', 'Senador', 'Deputado Federal'] as const).map((item) => {
+              {(
+                [
+                  'Todos',
+                  'Presidente',
+                  'Governador',
+                  'Senador',
+                  'Deputado Federal',
+                  'Deputado Estadual',
+                ] as const
+              ).map((item) => {
                 const ativo = filtroCargo === item;
                 return (
                   <TouchableOpacity

@@ -25,6 +25,7 @@ export default function TelaDetalhesCandidato() {
   const [salvoNaCola, setSalvoNaCola] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [fotoUri, setFotoUri] = useState<string | null>(null);
 
   useEffect(() => {
     let ativo = true;
@@ -35,6 +36,7 @@ export default function TelaDetalhesCandidato() {
       .then(([dados, favorito]) => {
         if (ativo) {
           setCandidato(dados);
+          setFotoUri(dados.foto || null);
           setSalvoNaCola(favorito);
           setCarregando(false);
         }
@@ -99,6 +101,7 @@ export default function TelaDetalhesCandidato() {
   }
 
   const votosFormatados = candidato.votos.toLocaleString('pt-BR');
+  const fotoFallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(candidato.nome)}&background=C8102E&color=fff&size=256&format=png`;
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
@@ -118,7 +121,12 @@ export default function TelaDetalhesCandidato() {
 
         <View style={styles.cardPerfil}>
           <View style={styles.areaFoto}>
-            <Image source={{ uri: candidato.foto }} style={styles.foto} resizeMode="cover" />
+            <Image
+              source={{ uri: fotoUri || candidato.foto }}
+              style={styles.foto}
+              resizeMode="cover"
+              onError={() => setFotoUri(fotoFallback)}
+            />
             <View style={styles.seloNumero}>
               <Text style={styles.txtSeloNumero}>{candidato.numero}</Text>
             </View>

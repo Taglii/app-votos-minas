@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,6 +18,9 @@ export const CandidateCard: React.FC<Props> = ({
   onRemover,
   salvo = false,
 }) => {
+  const fotoFallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(candidato.nome)}&background=C8102E&color=fff&size=256&format=png`;
+  const [fotoUri, setFotoUri] = useState(candidato.foto || fotoFallback);
+
   const abrirDetalhes = () => {
     if (onPress) {
       onPress();
@@ -40,9 +43,10 @@ export const CandidateCard: React.FC<Props> = ({
       <View style={styles.linhaPrincipal}>
         <View style={styles.fotoContainer}>
           <Image
-            source={{ uri: candidato.foto }}
+            source={{ uri: fotoUri }}
             style={styles.foto}
             resizeMode="cover"
+            onError={() => setFotoUri(fotoFallback)}
           />
           <View style={styles.badgeNumero}>
             <Text style={styles.textoNumero}>{candidato.numero}</Text>

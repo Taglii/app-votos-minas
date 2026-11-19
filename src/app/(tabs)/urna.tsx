@@ -19,16 +19,35 @@ import { Candidato, Cargo, VotoUrnaRegistro } from '@/types/candidato';
 import { UrnaTeclado } from '@/components/UrnaTeclado';
 
 const CONFIG_CARGO: Record<Cargo, { digitos: number; titulo: string }> = {
+  Presidente: { digitos: 2, titulo: 'PRESIDENTE' },
   Governador: { digitos: 2, titulo: 'GOVERNADOR' },
   Senador: { digitos: 3, titulo: 'SENADOR' },
   'Deputado Federal': { digitos: 4, titulo: 'DEPUTADO FEDERAL' },
+  'Deputado Estadual': { digitos: 5, titulo: 'DEPUTADO ESTADUAL' },
 };
+
+const CARGOS_DISPONIVEIS: Cargo[] = [
+  'Presidente',
+  'Governador',
+  'Senador',
+  'Deputado Federal',
+  'Deputado Estadual',
+];
 
 export default function TelaUrna() {
   const params = useLocalSearchParams<{ prefillNumero?: string; cargo?: Cargo }>();
 
   const [cargo, setCargo] = useState<Cargo>(() => {
-    if (params.cargo && ['Governador', 'Senador', 'Deputado Federal'].includes(params.cargo)) {
+    if (
+      params.cargo &&
+      [
+        'Presidente',
+        'Governador',
+        'Senador',
+        'Deputado Federal',
+        'Deputado Estadual',
+      ].includes(params.cargo)
+    ) {
       return params.cargo;
     }
     return 'Governador';
@@ -224,7 +243,7 @@ export default function TelaUrna() {
         <View style={styles.seletorCargos}>
           <Text style={styles.rotuloSeletor}>Escolha o Cargo:</Text>
           <View style={styles.linhaBotoesCargo}>
-            {(['Governador', 'Senador', 'Deputado Federal'] as const).map((item) => {
+            {CARGOS_DISPONIVEIS.map((item) => {
               const ativo = cargo === item;
               return (
                 <TouchableOpacity
@@ -381,14 +400,16 @@ const styles = StyleSheet.create({
   },
   linhaBotoesCargo: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 6,
   },
   btnCargo: {
-    flex: 1,
     backgroundColor: '#FFFFFF',
     paddingVertical: 7,
+    paddingHorizontal: 9,
     borderRadius: 6,
     alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
     borderColor: '#D1D5DB',
   },

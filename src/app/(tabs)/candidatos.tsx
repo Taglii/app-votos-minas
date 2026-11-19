@@ -170,7 +170,16 @@ export default function TelaCandidatos() {
         <View style={styles.grupoFiltro}>
           <Text style={styles.rotulo}>Cargo:</Text>
           <View style={styles.linhaChips}>
-            {(['Todos', 'Governador', 'Senador', 'Deputado Federal'] as const).map((item) => {
+            {(
+              [
+                'Todos',
+                'Presidente',
+                'Governador',
+                'Senador',
+                'Deputado Federal',
+                'Deputado Estadual',
+              ] as const
+            ).map((item) => {
               const ativo = cargoSelecionado === item;
               return (
                 <TouchableOpacity

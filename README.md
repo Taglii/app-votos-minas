@@ -1,119 +1,277 @@
-# 🔺 Voto Minas - Eleições de Minas Gerais
+# 🗳️ Voto Minas — Eleições de Minas Gerais
 
-Aplicativo móvel desenvolvido em **React Native**, **Expo (SDK 58)**, **Expo Router (File-Based Routing)** e **TypeScript**, focado nas eleições gerais de Minas Gerais.
+Aplicativo móvel desenvolvido em **React Native, Expo SDK 58, Expo Router e TypeScript**, com foco nas eleições gerais de Minas Gerais e na disputa presidencial.
 
----
-
-## 📱 Visão Geral e Funcionalidades
-
-O **Voto Minas** é uma plataforma cívica completa projetada para informar os cidadãos sobre os candidatos aos principais cargos eletivos de Minas Gerais, permitir a organização de uma "cola eleitoral" offline e disponibilizar um simulador fidedigno da urna eletrônica brasileira.
-
-### Principais Recursos
-1. **Dashboard Interativo (Início):**
-   - Resumo completo das eleições em Minas Gerais (*"Libertas Quæ Sera Tamen"*).
-   - Estatísticas de apuração simulada e total de votos registrados na urna.
-   - Contagem e distribuição por cargo (Governador, Senador e Deputado Federal) e por lado político (Esquerda, Centro e Direita).
-   - Atalhos rápidos e pré-filtros diretos para as demais abas.
-
-2. **Consulta e Filtro de Candidatos:**
-   - Lista consumida de serviço assíncrono com delay simulado (`Promise`) e tratamento de erros.
-   - Estados visuais de carregamento (`ActivityIndicator`) e erro com botão "Tentar Novamente".
-   - Barra de busca em tempo real por nome, número ou partido.
-   - Filtros dinâmicos por espectro político (Esquerda, Centro, Direita) e cargo.
-
-3. **Perfil Detalhado do Candidato (`/candidato/[id]`):**
-   - Foto, nome, número eleitoral em destaque, cargo, partido e biografia contextualizada no estado de MG.
-   - Badges temáticos e status eleitoral (*"Eleito"* / *"Não Eleito"*).
-   - Propostas de governo para Minas Gerais.
-   - Botão para salvar/remover o candidato na **Minha Cola** persistido offline no `@react-native-async-storage/async-storage`.
-   - Atalho direto para testar o voto deste candidato na urna eletrônica.
-
-4. **Simulador de Urna Eletrônica:**
-   - Reprodução fidedigna da urna eletrônica do TSE/TRE-MG.
-   - Visor digital interativo com busca em tempo real conforme os dígitos são digitados.
-   - Exibição de foto do candidato, nome e partido no visor.
-   - Tratamento de **Voto Nulo** (número inválido) e **Voto em Branco**.
-   - Teclado com teclas clássicas **BRANCO**, **CORRIGE** e **CONFIRMA**.
-   - Tela final de **FIM** com sinal sonoro simulado (*PILILILI*).
-   - Registro de votos simulados armazenado e totalizado no `AsyncStorage` com opção de Zerésima.
-
-5. **Minha Cola Eleitoral (Offline):**
-   - Acesso rápido aos candidatos selecionados pelo eleitor.
-   - Persistência permanente no dispositivo via `AsyncStorage`.
-   - Remoção individual de candidatos da cola ou limpeza total.
-   - Filtro por cargo e botão para treinar diretamente na urna.
+O Voto Minas é uma plataforma cívica desenvolvida para facilitar o acesso às informações eleitorais, permitindo que os cidadãos consultem candidatos, organizem sua própria cola eleitoral e pratiquem seus votos por meio de um simulador inspirado na urna eletrônica brasileira.
 
 ---
 
-## 🏗️ Estrutura de Diretórios
+## 📱 Funcionalidades
 
-```
-voto-minas/
-├── src/
-│   ├── app/
-│   │   ├── _layout.tsx              # Stack Navigator raiz
-│   │   ├── (tabs)/
-│   │   │   ├── _layout.tsx          # Bottom Tabs Navigator (4 abas)
-│   │   │   ├── index.tsx            # Aba 1: Dashboard Início
-│   │   │   ├── candidatos.tsx       # Aba 2: Lista com Busca e Filtros
-│   │   │   ├── urna.tsx             # Aba 3: Urna Eletrônica Interativa
-│   │   │   └── favoritos.tsx        # Aba 4: Minha Cola (Favoritos)
-│   │   └── candidato/
-│   │       └── [id].tsx             # Rota Dinâmica: Detalhes do Candidato
-│   ├── components/
-│   │   ├── Badge.tsx                # Badges estilizados (Cargo, Lado, Eleito)
-│   │   ├── CandidateCard.tsx        # Card reutilizável na lista e favoritos
-│   │   └── UrnaTeclado.tsx          # Teclado realista da urna (0-9, BRANCO, CORRIGE, CONFIRMA)
-│   ├── services/
-│   │   ├── api.ts                   # Camada de comunicação com a API do Gist (785 candidatos)
-│   │   └── storage.ts               # Persistência via @react-native-async-storage
-│   └── types/
-│       └── candidato.ts             # Tipos TypeScript do domínio eleitoral
-```
+### 1. Dashboard Interativo — Início
+- Resumo das eleições em Minas Gerais.
+- Identidade visual inspirada no lema do estado: *Libertas Quæ Sera Tamen*.
+- Estatísticas de apuração e votos registrados na simulação.
+- Distribuição de candidatos por cargo:
+  - Presidente;
+  - Governador;
+  - Senador;
+  - Deputado Federal;
+  - Deputado Estadual.
+- Distribuição por espectro político:
+  - Esquerda;
+  - Centro-Esquerda;
+  - Centro;
+  - Centro-Direita;
+  - Direita.
+- Atalhos rápidos para as principais funcionalidades.
+
+### 2. Consulta e Filtro de Candidatos
+- Integração com a API pública Eleições.dev.
+- Consulta de dados eleitorais provenientes do TSE.
+- Cache em memória para otimização das requisições.
+- Tratamento de erros e estados de carregamento.
+- Busca em tempo real por nome, número ou partido.
+- Filtros dinâmicos por cargo e espectro político.
+
+### 3. Perfil Detalhado do Candidato
+Cada candidato possui uma página individual com:
+- Foto oficial;
+- Nome de urna;
+- Número eleitoral;
+- Cargo disputado;
+- Partido;
+- Naturalidade;
+- Ocupação;
+- Escolaridade;
+- Biografia baseada nos dados disponíveis do TSE;
+- Situação eleitoral e informações complementares.
+
+Também é possível:
+- Adicionar ou remover candidatos da Minha Cola;
+- Salvar candidatos para acesso offline;
+- Abrir diretamente o simulador de urna com o candidato selecionado.
+
+### 4. Simulador de Urna Eletrônica
+Simulador interativo inspirado na urna eletrônica utilizada pelo TSE/TRE-MG.
+
+**Recursos disponíveis:**
+- Visor digital interativo;
+- Busca automática de candidatos conforme a digitação;
+- Exibição da foto, nome, número e partido;
+- Simulação de voto válido;
+- Simulação de voto nulo;
+- Simulação de voto em branco;
+- Teclas BRANCO, CORRIGE e CONFIRMA;
+- Tela de encerramento com mensagem FIM;
+- Efeito sonoro simulado de confirmação (PILILILI).
+
+**Quantidade de dígitos por cargo:**
+
+| Cargo | Dígitos |
+|---|---:|
+| Presidente | 2 |
+| Governador | 2 |
+| Senador | 3 |
+| Deputado Federal | 4 |
+| Deputado Estadual | 5 |
+
+Os votos simulados são armazenados localmente e totalizados no dispositivo, com opção de zerésima para reiniciar os registros.
+
+### 5. Minha Cola Eleitoral — Offline
+Permite que o eleitor organize os candidatos que deseja consultar durante sua preparação para a votação.
+
+- Armazenamento local via AsyncStorage;
+- Acesso offline aos candidatos salvos;
+- Remoção individual de candidatos;
+- Limpeza completa da lista;
+- Filtro por cargo;
+- Atalho para treinar o voto diretamente no simulador.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **React Native** & **React 19**
-- **Expo SDK 58**
-- **Expo Router** (Roteamento baseado em arquivos com Stack e Bottom Tabs)
-- **TypeScript** (Tipagem estrita e validação total)
-- **@react-native-async-storage/async-storage** (Armazenamento local offline)
-- **API Externa de Dados Reais de MG** (GitHub Gist com 785 candidatos do TRE-MG)
-- **@expo/vector-icons** (Ionicons)
-- **React Native Safe Area Context**
+| Tecnologia | Versão | Finalidade |
+|---|---|---|
+| React Native | 0.88.1 | Desenvolvimento mobile |
+| React | 19 | Construção da interface |
+| Expo | SDK 58 | Plataforma de desenvolvimento |
+| Expo Router | 58 | Navegação baseada em arquivos |
+| TypeScript | 6 | Tipagem estática |
+| AsyncStorage | 2.2.0 | Armazenamento local |
+| Expo Vector Icons | 15 | Ícones da aplicação |
+| Safe Area Context | 5.11 | Gerenciamento de áreas seguras |
+
+### APIs e serviços externos
+
+**Eleições.dev**
+
+API utilizada para consultar informações eleitorais e dados de candidatos provenientes das bases do TSE.
+
+Documentação e acesso: https://api.eleicoes.dev
+
+**wsrv.nl**
+
+Proxy de imagens utilizado para permitir a renderização de fotografias hospedadas nos servidores do TSE, contornando restrições relacionadas ao cabeçalho `Content-Disposition: attachment`.
+
+---
+
+## 📂 Estrutura do Projeto
+
+```text
+voto-minas/
+│
+├── .env
+│
+├── src/
+│   ├── app/
+│   │   ├── _layout.tsx
+│   │   │
+│   │   ├── (tabs)/
+│   │   │   ├── _layout.tsx
+│   │   │   ├── index.tsx
+│   │   │   ├── candidatos.tsx
+│   │   │   ├── urna.tsx
+│   │   │   └── favoritos.tsx
+│   │   │
+│   │   └── candidato/
+│   │       └── [id].tsx
+│   │
+│   ├── components/
+│   │   ├── Badge.tsx
+│   │   ├── CandidateCard.tsx
+│   │   └── UrnaTeclado.tsx
+│   │
+│   ├── services/
+│   │   ├── api.ts
+│   │   └── storage.ts
+│   │
+│   └── types/
+│       └── candidato.ts
+│
+├── package.json
+└── README.md
+```
 
 ---
 
 ## 🚀 Como Executar o Projeto
 
-1. Instale as dependências caso ainda não tenha feito:
-   ```bash
-   npm install
-   ```
+### 1. Pré-requisitos
 
-2. Inicie o servidor de desenvolvimento do Expo:
-   ```bash
-   npx expo start
-   ```
+Antes de começar, certifique-se de possuir:
 
-3. Escolha uma das opções:
-   - Pressione `a` para rodar no emulador **Android**.
-   - Pressione `i` para rodar no simulador **iOS**.
-   - Pressione `w` para rodar no **Navegador Web**.
-   - Ou escaneie o QR Code com o aplicativo **Expo Go** em seu dispositivo físico.
+- Node.js instalado;
+- npm instalado;
+- Git (opcional);
+- Expo CLI via `npx`.
+
+### 2. Instalar as dependências
+
+Clone o repositório e acesse a pasta do projeto:
+
+```bash
+git https://github.com/Taglii/app-votos-minas.git
+cd voto-minas
+```
+
+Instale as dependências:
+
+```bash
+npm install
+```
+
+### 3. Configurar a API
+
+Crie um arquivo `.env` na raiz do projeto:
+
+```env
+EXPO_PUBLIC_API_URL=https://api.eleicoes.dev
+EXPO_PUBLIC_API_KEY=sua_api_key_aqui
+```
+
+Obtenha sua chave de API gratuita através do site:
+
+https://eleicoes.dev
+
+**Importante:** não compartilhe sua chave de API publicamente.
+
+### 4. Iniciar o servidor
+
+Execute:
+
+```bash
+npx expo start
+```
+
+### 5. Escolher a plataforma
+
+Após iniciar o servidor, utilize os atalhos disponíveis:
+
+| Tecla | Plataforma |
+|---|---|
+| `a` | Emulador Android |
+| `i` | Simulador iOS |
+| `w` | Navegador Web |
+| QR Code | Dispositivo físico com Expo Go |
 
 ---
 
-## 🧪 Validação de Código e Qualidade
+## 🧪 Validação e Qualidade do Código
 
-O projeto está configurado com validações estritas de TypeScript e ESLint:
+O projeto utiliza TypeScript e ESLint para garantir maior confiabilidade e qualidade do código.
+
+**Verificar erros de TypeScript:**
 
 ```bash
-# Verificação de Tipos TypeScript (Zero erros)
 npx tsc --noEmit
-
-# Linting de Código (Zero warnings/erros)
-npx eslint src
 ```
+
+**Executar o ESLint:**
+
+```bash
+npx expo lint
+```
+
+O objetivo é manter o projeto sem erros de tipagem e sem avisos ou erros de linting.
+
+---
+
+## 💾 Armazenamento Offline
+
+O aplicativo utiliza `@react-native-async-storage/async-storage` para persistir informações localmente.
+
+Os dados armazenados incluem:
+
+- Candidatos selecionados na Minha Cola;
+- Histórico e totalização dos votos simulados;
+- Informações necessárias para funcionalidades offline.
+
+Isso permite que determinadas funcionalidades continuem disponíveis mesmo sem conexão com a internet.
+
+---
+
+## 🎯 Objetivo do Projeto
+
+O Voto Minas tem como objetivo aproximar os cidadãos do processo eleitoral, oferecendo uma ferramenta acessível para consulta de informações, organização de candidatos e familiarização com o funcionamento da urna eletrônica.
+
+A proposta é contribuir para uma participação eleitoral mais consciente e informada.
+
+---
+
+## ⚠️ AVISO IMPORTANTE
+
+O Voto Minas é um projeto independente, desenvolvido com finalidade informativa e educacional.
+
+O simulador não realiza votos oficiais, não possui vínculo institucional com o TSE ou TRE-MG e não substitui os canais oficiais de consulta eleitoral.
+
+As informações dos candidatos dependem da disponibilidade e atualização das fontes de dados utilizadas.
+
+---
+
+**Desenvolvido com React Native, Expo e TypeScript.**
+
+**Desenvolvido por Matheus Henrique Tagliatti**
+
+*Voto Minas — Informação para uma escolha consciente.*

@@ -67,9 +67,11 @@ export default function TelaInicio() {
   };
 
   // Contagens para os resumos
+  const totalPresidentes = candidatos.filter((c) => c.cargo === 'Presidente').length;
   const totalGovernadores = candidatos.filter((c) => c.cargo === 'Governador').length;
   const totalSenadores = candidatos.filter((c) => c.cargo === 'Senador').length;
-  const totalDeputados = candidatos.filter((c) => c.cargo === 'Deputado Federal').length;
+  const totalDeputadosFederais = candidatos.filter((c) => c.cargo === 'Deputado Federal').length;
+  const totalDeputadosEstaduais = candidatos.filter((c) => c.cargo === 'Deputado Estadual').length;
 
   const ladosDisponiveis: (LadoPolitico | 'Todos')[] = [
     'Todos',
@@ -134,6 +136,10 @@ export default function TelaInicio() {
 
           <View style={styles.linhaCargos}>
             <View style={styles.miniCardCargo}>
+              <Text style={styles.valorMini}>{totalPresidentes}</Text>
+              <Text style={styles.rotuloMini}>Presidente</Text>
+            </View>
+            <View style={styles.miniCardCargo}>
               <Text style={styles.valorMini}>{totalGovernadores}</Text>
               <Text style={styles.rotuloMini}>Governador</Text>
             </View>
@@ -142,8 +148,12 @@ export default function TelaInicio() {
               <Text style={styles.rotuloMini}>Senador</Text>
             </View>
             <View style={styles.miniCardCargo}>
-              <Text style={styles.valorMini}>{totalDeputados}</Text>
-              <Text style={styles.rotuloMini}>Dep. Federal</Text>
+              <Text style={styles.valorMini}>{totalDeputadosFederais}</Text>
+              <Text style={styles.rotuloMini}>Dep. Fed.</Text>
+            </View>
+            <View style={styles.miniCardCargo}>
+              <Text style={styles.valorMini}>{totalDeputadosEstaduais}</Text>
+              <Text style={styles.rotuloMini}>Dep. Est.</Text>
             </View>
           </View>
         </View>
@@ -214,7 +224,16 @@ export default function TelaInicio() {
 
           <Text style={styles.rotuloFiltro}>Cargo:</Text>
           <View style={styles.linhaChips}>
-            {(['Todos', 'Governador', 'Senador', 'Deputado Federal'] as const).map((item) => {
+            {(
+              [
+                'Todos',
+                'Presidente',
+                'Governador',
+                'Senador',
+                'Deputado Federal',
+                'Deputado Estadual',
+              ] as const
+            ).map((item) => {
               const ativo = filtroCargo === item;
               return (
                 <TouchableOpacity
@@ -367,27 +386,29 @@ const styles = StyleSheet.create({
   linhaCargos: {
     flexDirection: 'row',
     paddingHorizontal: 16,
-    gap: 8,
+    gap: 5,
     marginTop: 10,
   },
   miniCardCargo: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
-    paddingVertical: 8,
+    paddingVertical: 7,
+    paddingHorizontal: 2,
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
   valorMini: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '800',
     color: '#1F2937',
   },
   rotuloMini: {
-    fontSize: 11,
+    fontSize: 9.5,
     color: '#6B7280',
     marginTop: 2,
+    textAlign: 'center',
   },
   linhaAtalhos: {
     flexDirection: 'row',
