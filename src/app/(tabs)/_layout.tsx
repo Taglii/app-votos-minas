@@ -1,6 +1,5 @@
-import React from 'react';
-import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { Tabs } from 'expo-router';
 import { Platform, StyleSheet } from 'react-native';
 
 export default function TabsLayout() {
@@ -39,6 +38,20 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size, focused }) => (
             <Ionicons
               name={focused ? 'people' : 'people-outline'}
+              size={size}
+              color={String(color)}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="mapa"
+        options={{
+          title: 'Mapa MG',
+          headerTitle: 'Mapa Eleitoral MG',
+          tabBarIcon: ({ color, size, focused }) => (
+            <Ionicons
+              name={focused ? 'map' : 'map-outline'}
               size={size}
               color={String(color)}
             />
