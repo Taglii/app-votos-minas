@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
   ActivityIndicator,
   Alert,
@@ -16,6 +15,7 @@ import { api } from '@/services/api';
 import { storageService } from '@/services/storage';
 import { Candidato } from '@/types/candidato';
 import { Badge } from '@/components/Badge';
+import { CandidateImage } from '@/components/CandidateImage';
 
 export default function TelaDetalhesCandidato() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -25,7 +25,6 @@ export default function TelaDetalhesCandidato() {
   const [salvoNaCola, setSalvoNaCola] = useState(false);
   const [salvando, setSalvando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
-  const [fotoUri, setFotoUri] = useState<string | null>(null);
 
   useEffect(() => {
     let ativo = true;
@@ -36,7 +35,6 @@ export default function TelaDetalhesCandidato() {
       .then(([dados, favorito]) => {
         if (ativo) {
           setCandidato(dados);
-          setFotoUri(dados.foto || null);
           setSalvoNaCola(favorito);
           setCarregando(false);
         }
@@ -101,7 +99,14 @@ export default function TelaDetalhesCandidato() {
   }
 
   const votosFormatados = candidato.votos.toLocaleString('pt-BR');
-  const fotoFallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(candidato.nome)}&background=C8102E&color=fff&size=256&format=png`;
+  const patrimonioFormatado =
+    typeof candidato.patrimonioDeclarado === 'number' && candidato.patrimonioDeclarado > 0
+      ? candidato.patrimonioDeclarado.toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+          maximumFractionDigits: 2,
+        })
+      : null;
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom', 'left', 'right']}>
@@ -121,11 +126,13 @@ export default function TelaDetalhesCandidato() {
 
         <View style={styles.cardPerfil}>
           <View style={styles.areaFoto}>
-            <Image
-              source={{ uri: fotoUri || candidato.foto }}
-              style={styles.foto}
-              resizeMode="cover"
-              onError={() => setFotoUri(fotoFallback)}
+            <CandidateImage
+              uri={candidato.foto}
+              nome={candidato.nome}
+              size={104}
+              circular
+              borderWidth={3}
+              borderColor="#C8102E"
             />
             <View style={styles.seloNumero}>
               <Text style={styles.txtSeloNumero}>{candidato.numero}</Text>
@@ -133,6 +140,9 @@ export default function TelaDetalhesCandidato() {
           </View>
 
           <Text style={styles.nomeCandidato}>{candidato.nome}</Text>
+          {candidato.nomeCompleto && candidato.nomeCompleto !== candidato.nome && (
+            <Text style={styles.nomeCompletoCandidato}>{candidato.nomeCompleto}</Text>
+          )}
           <Text style={styles.partidoCandidato}>{candidato.partido}</Text>
 
           <View style={styles.linhaTags}>
@@ -167,7 +177,7 @@ export default function TelaDetalhesCandidato() {
         <View style={styles.secao}>
           <View style={styles.cabecalhoSecao}>
             <Ionicons name="stats-chart" size={18} color="#C8102E" />
-            <Text style={styles.tituloSecao}>Votação em Minas Gerais</Text>
+            <Text style={styles.tituloSecao}>Votação Oficial / Apuração</Text>
           </View>
 
           <View style={styles.caixaVotos}>
@@ -178,9 +188,7 @@ export default function TelaDetalhesCandidato() {
           <View style={styles.caixaStatus}>
             <Text style={styles.tituloStatus}>Situação Eleitoral:</Text>
             <Text style={styles.descStatus}>
-              {candidato.eleito
-                ? 'Candidato ELEITO para o cargo conforme a apuração simulada.'
-                : 'Candidato NÃO ELEITO neste pleito.'}
+              {candidato.situacao || (candidato.eleito ? 'Eleito conforme apuração oficial.' : 'Não eleito neste pleito.')}
             </Text>
           </View>
         </View>
@@ -191,24 +199,69 @@ export default function TelaDetalhesCandidato() {
             <Text style={styles.tituloSecao}>Dados da Candidatura</Text>
           </View>
 
+          <View style={styles.itemInfo}>
+            <Text style={styles.rotuloInfo}>Número de urna:</Text>
+            <Text style={styles.valorDestaque}>{candidato.numero}</Text>
+          </View>
+
+          <View style={styles.itemInfo}>
+            <Text style={styles.rotuloInfo}>Cargo disputado:</Text>
+            <Text style={styles.valorInfo}>{candidato.cargo}</Text>
+          </View>
+
+          <View style={styles.itemInfo}>
+            <Text style={styles.rotuloInfo}>Partido / Legenda:</Text>
+            <Text style={styles.valorInfo}>{candidato.partido}</Text>
+          </View>
+
           {candidato.viceOuSuplente && (
             <View style={styles.itemInfo}>
-              <Text style={styles.rotuloInfo}>Vice / Suplente:</Text>
+              <Text style={styles.rotuloInfo}>Vice / Suplente / Coligação:</Text>
               <Text style={styles.valorInfo}>{candidato.viceOuSuplente}</Text>
             </View>
           )}
 
           {candidato.cidadeNatal && (
             <View style={styles.itemInfo}>
-              <Text style={styles.rotuloInfo}>Origem:</Text>
+              <Text style={styles.rotuloInfo}>Naturalidade:</Text>
               <Text style={styles.valorInfo}>{candidato.cidadeNatal}</Text>
             </View>
           )}
 
-          <View style={styles.itemInfo}>
-            <Text style={styles.rotuloInfo}>Número de urna:</Text>
-            <Text style={styles.valorDestaque}>{candidato.numero}</Text>
-          </View>
+          {candidato.ocupacao && (
+            <View style={styles.itemInfo}>
+              <Text style={styles.rotuloInfo}>Ocupação:</Text>
+              <Text style={styles.valorInfo}>{candidato.ocupacao}</Text>
+            </View>
+          )}
+
+          {candidato.escolaridade && (
+            <View style={styles.itemInfo}>
+              <Text style={styles.rotuloInfo}>Grau de instrução:</Text>
+              <Text style={styles.valorInfo}>{candidato.escolaridade}</Text>
+            </View>
+          )}
+
+          {patrimonioFormatado && (
+            <View style={styles.itemInfo}>
+              <Text style={styles.rotuloInfo}>Bens declarados:</Text>
+              <Text style={styles.valorInfo}>{patrimonioFormatado}</Text>
+            </View>
+          )}
+
+          {candidato.cnpjCampanha && (
+            <View style={styles.itemInfo}>
+              <Text style={styles.rotuloInfo}>CNPJ de campanha:</Text>
+              <Text style={styles.valorInfo}>{candidato.cnpjCampanha}</Text>
+            </View>
+          )}
+
+          {candidato.estado && (
+            <View style={styles.itemInfo}>
+              <Text style={styles.rotuloInfo}>Unidade Eleitoral:</Text>
+              <Text style={styles.valorInfo}>{candidato.estado === 'BR' ? 'Brasil (Nacional)' : candidato.estado}</Text>
+            </View>
+          )}
         </View>
 
         {candidato.biografia && (
@@ -351,6 +404,13 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#111827',
     textAlign: 'center',
+  },
+  nomeCompletoCandidato: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#4B5563',
+    textAlign: 'center',
+    marginTop: 2,
   },
   partidoCandidato: {
     fontSize: 13,

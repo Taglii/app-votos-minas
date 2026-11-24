@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
   Alert,
   Platform,
@@ -17,6 +16,7 @@ import { api } from '@/services/api';
 import { storageService } from '@/services/storage';
 import { Candidato, Cargo, VotoUrnaRegistro } from '@/types/candidato';
 import { UrnaTeclado } from '@/components/UrnaTeclado';
+import { CandidateImage } from '@/components/CandidateImage';
 
 const CONFIG_CARGO: Record<Cargo, { digitos: number; titulo: string }> = {
   Presidente: { digitos: 2, titulo: 'PRESIDENTE' },
@@ -59,6 +59,31 @@ export default function TelaUrna() {
   const [totalVotos, setTotalVotos] = useState(0);
 
   const qtdDigitos = CONFIG_CARGO[cargo].digitos;
+
+  // Ajusta o estado durante a renderização quando os parâmetros da rota mudam (padrão React 19)
+  const [parametrosAnteriores, setParametrosAnteriores] = useState({
+    cargo: params.cargo,
+    prefillNumero: params.prefillNumero,
+  });
+
+  if (
+    params.cargo !== parametrosAnteriores.cargo ||
+    params.prefillNumero !== parametrosAnteriores.prefillNumero
+  ) {
+    setParametrosAnteriores({
+      cargo: params.cargo,
+      prefillNumero: params.prefillNumero,
+    });
+
+    if (params.cargo && CARGOS_DISPONIVEIS.includes(params.cargo)) {
+      setCargo(params.cargo);
+    }
+    if (params.prefillNumero !== undefined && params.prefillNumero !== '') {
+      setDigitos(params.prefillNumero);
+      setVotouEmBranco(false);
+      setTelaFim(false);
+    }
+  }
 
   useEffect(() => {
     let ativo = true;
@@ -146,7 +171,9 @@ export default function TelaUrna() {
   };
 
   const corrigir = () => {
-    if (telaFim) return;
+    if (telaFim) {
+      setTelaFim(false);
+    }
     setDigitos('');
     setVotouEmBranco(false);
     setCandidato(null);
@@ -332,7 +359,14 @@ export default function TelaUrna() {
 
                   {candidato && (
                     <View style={styles.fotoContainer}>
-                      <Image source={{ uri: candidato.foto }} style={styles.fotoUrna} resizeMode="cover" />
+                      <CandidateImage
+                        uri={candidato.foto}
+                        nome={candidato.nome}
+                        width={72}
+                        height={86}
+                        circular={false}
+                        borderRadius={4}
+                      />
                       <Text style={styles.legendaFoto}>
                         {candidato.cargo === 'Governador' ? 'GOV' : 'CAND'}
                       </Text>

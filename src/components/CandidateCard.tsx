@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Candidato } from '@/types/candidato';
 import { Badge } from '@/components/Badge';
+import { CandidateImage } from '@/components/CandidateImage';
 
 interface Props {
   candidato: Candidato;
@@ -18,9 +19,6 @@ export const CandidateCard: React.FC<Props> = ({
   onRemover,
   salvo = false,
 }) => {
-  const fotoFallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(candidato.nome)}&background=C8102E&color=fff&size=256&format=png`;
-  const [fotoUri, setFotoUri] = useState(candidato.foto || fotoFallback);
-
   const abrirDetalhes = () => {
     if (onPress) {
       onPress();
@@ -42,11 +40,11 @@ export const CandidateCard: React.FC<Props> = ({
     >
       <View style={styles.linhaPrincipal}>
         <View style={styles.fotoContainer}>
-          <Image
-            source={{ uri: fotoUri }}
-            style={styles.foto}
-            resizeMode="cover"
-            onError={() => setFotoUri(fotoFallback)}
+          <CandidateImage
+            uri={candidato.foto}
+            nome={candidato.nome}
+            size={64}
+            circular
           />
           <View style={styles.badgeNumero}>
             <Text style={styles.textoNumero}>{candidato.numero}</Text>
@@ -88,7 +86,11 @@ export const CandidateCard: React.FC<Props> = ({
           <Ionicons name="people-outline" size={14} color="#6B7280" />
           <Text style={styles.textoVotos}>{votosFormatados} votos</Text>
         </View>
-        <Badge tipo="eleito" valor={candidato.situacao || candidato.eleito} tamanho="pequeno" />
+        <Badge
+          tipo="eleito"
+          valor={candidato.situacao || (candidato.eleito ? 'ELEITO' : 'NÃO ELEITO')}
+          tamanho="pequeno"
+        />
       </View>
     </TouchableOpacity>
   );

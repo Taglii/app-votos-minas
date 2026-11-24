@@ -1,3 +1,5 @@
+import { ImageSourcePropType } from 'react-native';
+
 export type Cargo =
   | 'Presidente'
   | 'Governador'
@@ -24,7 +26,7 @@ export interface Candidato {
   votos: number;
   situacao?: string;
   eleito: boolean;
-  foto: string;
+  foto: ImageSourcePropType | string;
   viceOuSuplente?: string;
   biografia?: string;
   propostas?: string[];

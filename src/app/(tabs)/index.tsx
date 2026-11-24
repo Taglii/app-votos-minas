@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { api } from '@/services/api';
 import { storageService } from '@/services/storage';
@@ -39,6 +39,18 @@ export default function TelaInicio() {
       setAtualizando(false);
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      let ativo = true;
+      storageService.getTotalVotosSimulados().then((total) => {
+        if (ativo) setTotalVotos(total);
+      });
+      return () => {
+        ativo = false;
+      };
+    }, [])
+  );
 
   useEffect(() => {
     let ativo = true;
