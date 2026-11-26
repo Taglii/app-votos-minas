@@ -28,10 +28,21 @@ interface CandidatoCidade {
 }
 
 interface DadosCidade {
+  codigoIbge?: string;
+  codarea?: string;
+  ibge?: string;
   nome: string;
   presidente: CandidatoCidade[];
   governador: CandidatoCidade[];
   senador: CandidatoCidade[];
+}
+
+interface MunicipioIndexado {
+  id: string; // Código IBGE de 7 dígitos (codarea)
+  nome: string;
+  nomeNormalizado: string;
+  termosBusca: string[];
+  dados?: DadosCidade;
 }
 
 const votosPorCidade = votosPorCidadeRaw as Record<string, DadosCidade>;
@@ -49,20 +60,55 @@ const CORES_PARTIDO: Record<string, string> = {
   PSOL: '#7C3AED',
 };
 
-const CIDADES_DESTAQUE = [
-  'BELO HORIZONTE',
-  'UBERLANDIA',
-  'CONTAGEM',
-  'JUIZ DE FORA',
-  'MONTES CLAROS',
+const CIDADES_DESTAQUE_IBGE = [
+  '3106200', // Belo Horizonte
+  '3170206', // Uberlândia
+  '3118601', // Contagem
+  '3136702', // Juiz de Fora
+  '3143302', // Montes Claros
 ];
 
-const normalizar = (texto: string) =>
+const IBGE_JUIZ_DE_FORA = '3136702';
+
+// Aliases entre grafias do IBGE (GeoJSON) e do TSE (votosPorCidadeMG.json)
+const ALIASES_MUNICIPIOS_MG: Record<string, string[]> = {
+  'sao tome das letras': ['sao thome das letras'],
+  'sao thome das letras': ['sao tome das letras'],
+  'dona euzebia': ['dona eusebia'],
+  'dona eusebia': ['dona euzebia'],
+  'barao do monte alto': ['barao de monte alto'],
+  'barao de monte alto': ['barao do monte alto'],
+  'olhos d agua': ['olhos dagua'],
+  'pingo d agua': ['pingo dagua'],
+};
+
+const normalizarTexto = (texto: string) =>
   (texto || '')
+    .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .toUpperCase()
+    .replace(/[-–—'’`]/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim();
+
+const obterCodigoIbgeFeature = (feature: any, fallbackIndex: number): string => {
+  const bruto =
+    feature?.properties?.codarea ??
+    feature?.properties?.CD_MUN ??
+    feature?.properties?.codigo_ibge ??
+    feature?.properties?.ibge ??
+    feature?.id;
+  const limpo = String(bruto || '').replace(/\D/g, '');
+  return limpo.length === 7 ? limpo : String(bruto || fallbackIndex);
+};
+
+const obterNomeFeature = (feature: any): string =>
+  String(
+    feature?.properties?.nome ||
+      feature?.properties?.name ||
+      feature?.properties?.NM_MUN ||
+      ''
+  ).trim();
 
 const corrigirWindingOrderGeoJson = (geo: any) => ({
   ...geo,
@@ -98,7 +144,7 @@ const corrigirWindingOrderGeoJson = (geo: any) => ({
 
 export default function MapaMinasScreen() {
   const [cargoSelecionado, setCargoSelecionado] = useState<CargoMapa>('governador');
-  const [cidadeChave, setCidadeChave] = useState<string>('JUIZ DE FORA');
+  const [cidadeSelecionadaId, setCidadeSelecionadaId] = useState<string>(IBGE_JUIZ_DE_FORA);
   const [busca, setBusca] = useState<string>('');
   const [presidentesApi, setPresidentesApi] = useState<CandidatoCidade[]>([]);
 
@@ -227,23 +273,136 @@ export default function MapaMinasScreen() {
       .catch(() => {});
   }, []);
 
+  const {
+    geoCorrigido,
+    municipiosIndex,
+    municipiosPorId,
+    votosSemCorrespondencia,
+    municipiosSemVotos,
+  } = useMemo(() => {
+    const geo = corrigirWindingOrderGeoJson(mgGeoJsonRaw);
+
+    const votosPorIbge = new Map<string, { chave: string; dados: DadosCidade }>();
+    const votosPorNome = new Map<string, { chave: string; dados: DadosCidade }>();
+
+    for (const [chave, dados] of Object.entries(votosPorCidade)) {
+      const ibgeBruto = String(dados.codigoIbge || dados.codarea || dados.ibge || '').replace(
+        /\D/g,
+        ''
+      );
+      if (ibgeBruto.length === 7) {
+        votosPorIbge.set(ibgeBruto, { chave, dados });
+      }
+      const normNome = normalizarTexto(dados.nome || chave);
+      if (normNome) {
+        votosPorNome.set(normNome, { chave, dados });
+      }
+      const normChave = normalizarTexto(chave);
+      if (normChave && !votosPorNome.has(normChave)) {
+        votosPorNome.set(normChave, { chave, dados });
+      }
+    }
+
+    const chavesVotosCasadas = new Set<string>();
+    const semVotos: { id: string; nome: string }[] = [];
+    const listaIndex: MunicipioIndexado[] = [];
+    const mapaPorId: Record<string, MunicipioIndexado> = {};
+
+    (geo.features || []).forEach((feature: any, index: number) => {
+      const id = obterCodigoIbgeFeature(feature, index);
+      const nome = obterNomeFeature(feature);
+      const nomeNormalizado = normalizarTexto(nome);
+
+      // 1. Prioriza correspondência pelo código IBGE de 7 dígitos
+      let match = votosPorIbge.get(id);
+
+      // 2. Fallback por nome normalizado
+      if (!match && nomeNormalizado) {
+        match = votosPorNome.get(nomeNormalizado);
+      }
+
+      // 3. Fallback por aliases conhecidos de grafia em MG
+      if (!match && nomeNormalizado) {
+        const aliases = ALIASES_MUNICIPIOS_MG[nomeNormalizado] || [];
+        for (const alias of aliases) {
+          const encontrado = votosPorNome.get(alias);
+          if (encontrado) {
+            match = encontrado;
+            break;
+          }
+        }
+      }
+
+      if (match) {
+        chavesVotosCasadas.add(match.chave);
+      } else {
+        semVotos.push({ id, nome });
+      }
+
+      const termosSet = new Set<string>();
+      if (nomeNormalizado) termosSet.add(nomeNormalizado);
+      for (const alias of ALIASES_MUNICIPIOS_MG[nomeNormalizado] || []) {
+        termosSet.add(alias);
+      }
+      if (match?.dados?.nome) {
+        const nomeDadosNorm = normalizarTexto(match.dados.nome);
+        if (nomeDadosNorm) termosSet.add(nomeDadosNorm);
+      }
+
+      const item: MunicipioIndexado = {
+        id,
+        nome: nome || match?.dados?.nome || id,
+        nomeNormalizado,
+        termosBusca: Array.from(termosSet),
+        dados: match?.dados,
+      };
+
+      listaIndex.push(item);
+      mapaPorId[id] = item;
+    });
+
+    const votosNaoCasados = Object.entries(votosPorCidade)
+      .filter(([chave]) => !chavesVotosCasadas.has(chave))
+      .map(([chave, dados]) => ({ chave, nome: dados.nome }));
+
+    return {
+      geoCorrigido: geo,
+      municipiosIndex: listaIndex,
+      municipiosPorId: mapaPorId,
+      votosSemCorrespondencia: votosNaoCasados,
+      municipiosSemVotos: semVotos,
+    };
+  }, []);
+
+  useEffect(() => {
+    if (__DEV__) {
+      console.log(
+        `[Mapa MG] Municípios no GeoJSON: ${municipiosIndex.length} | Sem dados de votos: ${municipiosSemVotos.length} | Registros de votos sem cidade no mapa: ${votosSemCorrespondencia.length}`
+      );
+      if (municipiosSemVotos.length > 0) {
+        console.warn('[Mapa MG] Municípios do mapa sem correspondência:', municipiosSemVotos);
+      }
+      if (votosSemCorrespondencia.length > 0) {
+        console.warn(
+          '[Mapa MG] Registros de votos sem correspondência no mapa:',
+          votosSemCorrespondencia
+        );
+      }
+    }
+  }, [municipiosIndex.length, municipiosSemVotos, votosSemCorrespondencia]);
+
   const { municipiosPaths, legendaPartidos } = useMemo(() => {
-    const geoCorrigido = corrigirWindingOrderGeoJson(mgGeoJsonRaw);
     const projection = geoMercator().fitSize([larguraMapa, alturaMapa], geoCorrigido);
     const pathGenerator = geoPath().projection(projection);
     const contagemPartidos: Record<string, number> = {};
 
     const paths = (geoCorrigido.features || []).map((feature: any, index: number) => {
-      const nomeProp =
-        feature.properties?.nome ||
-        feature.properties?.name ||
-        feature.properties?.NM_MUN ||
-        '';
-      const chave = normalizar(nomeProp);
-      const dados = votosPorCidade[chave];
+      const id = obterCodigoIbgeFeature(feature, index);
+      const municipio = municipiosPorId[id];
+      const dados = municipio?.dados;
 
       const listaCargo =
-        dados?.[cargoSelecionado]?.length > 0
+        dados && dados[cargoSelecionado]?.length > 0
           ? dados[cargoSelecionado]
           : cargoSelecionado === 'presidente'
             ? presidentesApi
@@ -259,8 +418,7 @@ export default function MapaMinasScreen() {
       const cor = partido ? CORES_PARTIDO[partido] || '#64748B' : '#CBD5E1';
 
       return {
-        id: String(feature.properties?.codarea || index),
-        chave,
+        id,
         d: pathGenerator(feature) || '',
         cor,
       };
@@ -275,17 +433,21 @@ export default function MapaMinasScreen() {
       }));
 
     return { municipiosPaths: paths, legendaPartidos: legenda };
-  }, [cargoSelecionado, larguraMapa, alturaMapa, presidentesApi]);
+  }, [geoCorrigido, municipiosPorId, cargoSelecionado, larguraMapa, alturaMapa, presidentesApi]);
 
   const sugestoesCidades = useMemo(() => {
-    const termo = normalizar(busca);
+    const termo = normalizarTexto(busca);
     if (termo.length < 2) return [];
-    return Object.entries(votosPorCidade)
-      .filter(([chave]) => chave.includes(termo))
-      .slice(0, 5);
-  }, [busca]);
+    return municipiosIndex
+      .filter(
+        (mun) =>
+          mun.id.includes(termo) || mun.termosBusca.some((t) => t.includes(termo))
+      )
+      .slice(0, 6);
+  }, [busca, municipiosIndex]);
 
-  const dadosCidadeAtual = votosPorCidade[cidadeChave];
+  const municipioAtual = municipiosPorId[cidadeSelecionadaId];
+  const dadosCidadeAtual = municipioAtual?.dados;
   const rankingBruto = dadosCidadeAtual?.[cargoSelecionado] || [];
   const usandoTotalEstadualPresidente =
     cargoSelecionado === 'presidente' && rankingBruto.length === 0;
@@ -323,17 +485,17 @@ export default function MapaMinasScreen() {
 
       {sugestoesCidades.length > 0 && (
         <View style={styles.listaSugestoes}>
-          {sugestoesCidades.map(([chave, info]) => (
+          {sugestoesCidades.map((mun) => (
             <TouchableOpacity
-              key={chave}
+              key={mun.id}
               style={styles.itemSugestao}
               onPress={() => {
-                setCidadeChave(chave);
+                setCidadeSelecionadaId(mun.id);
                 setBusca('');
               }}
             >
               <Ionicons name="location-outline" size={16} color="#C8102E" />
-              <Text style={styles.textoSugestao}>{info.nome}</Text>
+              <Text style={styles.textoSugestao}>{mun.nome}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -370,7 +532,7 @@ export default function MapaMinasScreen() {
           >
             <G>
               {municipiosPaths.map((mun: any) => {
-                const selecionada = mun.chave && mun.chave === cidadeChave;
+                const selecionada = mun.id === cidadeSelecionadaId;
                 return (
                   <Path
                     key={mun.id}
@@ -379,9 +541,7 @@ export default function MapaMinasScreen() {
                     stroke={selecionada ? '#111827' : '#FFFFFF'}
                     strokeWidth={(selecionada ? 1.5 : 0.35) / Math.sqrt(camera.scale)}
                     onPress={() => {
-                      if (mun.chave && votosPorCidade[mun.chave]) {
-                        setCidadeChave(mun.chave);
-                      }
+                      setCidadeSelecionadaId(mun.id);
                     }}
                   />
                 );
@@ -441,18 +601,18 @@ export default function MapaMinasScreen() {
         style={styles.atalhosScroll}
         contentContainerStyle={styles.atalhosContent}
       >
-        {CIDADES_DESTAQUE.map((chave) => {
-          const info = votosPorCidade[chave];
-          if (!info) return null;
-          const ativo = cidadeChave === chave;
+        {CIDADES_DESTAQUE_IBGE.map((ibge) => {
+          const mun = municipiosPorId[ibge];
+          if (!mun) return null;
+          const ativo = cidadeSelecionadaId === ibge;
           return (
             <TouchableOpacity
-              key={chave}
+              key={ibge}
               style={[styles.atalhoChip, ativo && styles.atalhoChipAtivo]}
-              onPress={() => setCidadeChave(chave)}
+              onPress={() => setCidadeSelecionadaId(ibge)}
             >
               <Text style={[styles.atalhoTexto, ativo && styles.atalhoTextoAtivo]}>
-                {info.nome}
+                {mun.nome}
               </Text>
             </TouchableOpacity>
           );
@@ -460,12 +620,12 @@ export default function MapaMinasScreen() {
       </ScrollView>
 
       {/* Card de resultado da cidade selecionada */}
-      {dadosCidadeAtual && (
+      {municipioAtual && (
         <View style={styles.resultadoCard}>
           <View style={styles.resultadoHeader}>
             <Ionicons name="location" size={20} color="#C8102E" />
             <View style={{ flex: 1 }}>
-              <Text style={styles.cidadeTitulo}>{dadosCidadeAtual.nome}</Text>
+              <Text style={styles.cidadeTitulo}>{municipioAtual.nome}</Text>
               <Text style={styles.cidadeSubtitulo}>
                 {usandoTotalEstadualPresidente
                   ? 'Resultado consolidado para PRESIDENTE (1º Turno)'
