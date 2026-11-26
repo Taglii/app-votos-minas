@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { geoMercator, geoPath } from 'd3-geo';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     Dimensions,
+    GestureResponderHandlers,
     PanResponder,
     ScrollView,
     StyleSheet,
@@ -119,18 +120,21 @@ export default function MapaMinasScreen() {
     dy: 0,
   });
 
-  const atualizarCamera = (novoScale: number, novoX: number, novoY: number) => {
-    const scaleLimitado = Math.min(Math.max(novoScale, 1), 8);
-    const maxPanX = (larguraMapa * (scaleLimitado - 1)) / 2;
-    const maxPanY = (alturaMapa * (scaleLimitado - 1)) / 2;
+  const atualizarCamera = useCallback(
+    (novoScale: number, novoX: number, novoY: number) => {
+      const scaleLimitado = Math.min(Math.max(novoScale, 1), 8);
+      const maxPanX = (larguraMapa * (scaleLimitado - 1)) / 2;
+      const maxPanY = (alturaMapa * (scaleLimitado - 1)) / 2;
 
-    const xLimitado = scaleLimitado === 1 ? 0 : Math.min(Math.max(novoX, -maxPanX), maxPanX);
-    const yLimitado = scaleLimitado === 1 ? 0 : Math.min(Math.max(novoY, -maxPanY), maxPanY);
+      const xLimitado = scaleLimitado === 1 ? 0 : Math.min(Math.max(novoX, -maxPanX), maxPanX);
+      const yLimitado = scaleLimitado === 1 ? 0 : Math.min(Math.max(novoY, -maxPanY), maxPanY);
 
-    const estado = { scale: scaleLimitado, x: xLimitado, y: yLimitado };
-    cameraRef.current = estado;
-    setCamera(estado);
-  };
+      const estado = { scale: scaleLimitado, x: xLimitado, y: yLimitado };
+      cameraRef.current = estado;
+      setCamera(estado);
+    },
+    [larguraMapa, alturaMapa]
+  );
 
   const aplicarZoomBotao = (fator: number) => {
     const { scale, x, y } = cameraRef.current;
@@ -142,8 +146,10 @@ export default function MapaMinasScreen() {
   };
 
   // PanResponder para gesto de Pinça (2 dedos) e Arrastar (1 dedo)
-  const panResponder = useRef(
-    PanResponder.create({
+  const [panHandlers, setPanHandlers] = useState<GestureResponderHandlers>({});
+
+  useEffect(() => {
+    const responder = PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onMoveShouldSetPanResponder: (_, gesture) =>
         gesture.numberActiveTouches >= 2 ||
@@ -198,8 +204,10 @@ export default function MapaMinasScreen() {
       },
       onPanResponderRelease: () => setInteragindoMapa(false),
       onPanResponderTerminate: () => setInteragindoMapa(false),
-    })
-  ).current;
+    });
+
+    setPanHandlers(responder.panHandlers);
+  }, [atualizarCamera]);
 
   useEffect(() => {
     api
@@ -353,7 +361,7 @@ export default function MapaMinasScreen() {
       <View style={styles.mapaCard}>
         <View
           style={{ width: larguraMapa, height: alturaMapa, overflow: 'hidden' }}
-          {...panResponder.panHandlers}
+          {...panHandlers}
         >
           <Svg
             width={larguraMapa}

@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  ActivityIndicator,
-  RefreshControl,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router, useFocusEffect } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { CandidateCard } from '@/components/CandidateCard';
 import { api } from '@/services/api';
 import { storageService } from '@/services/storage';
 import { Candidato, Cargo, LadoPolitico } from '@/types/candidato';
-import { CandidateCard } from '@/components/CandidateCard';
+import { Ionicons } from '@expo/vector-icons';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TelaInicio() {
   const [candidatos, setCandidatos] = useState<Candidato[]>([]);
@@ -115,7 +115,7 @@ export default function TelaInicio() {
       >
         <View style={styles.banner}>
           <Text style={styles.subtituloBanner}>MINAS GERAIS</Text>
-          <Text style={styles.tituloBanner}>Eleições Gerais</Text>
+          <Text style={styles.tituloBanner}>Eleições Gerais 1º Turno</Text>
           <Text style={styles.lema}>&ldquo;Libertas Quæ Sera Tamen&rdquo;</Text>
           <Text style={styles.descricaoBanner}>
             Acompanhe os candidatos de Minas, monte sua cola para o dia da votação e treine na urna eletrônica.

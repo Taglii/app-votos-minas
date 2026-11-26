@@ -1,21 +1,21 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  Platform,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { CandidateCard } from '@/components/CandidateCard';
 import { api } from '@/services/api';
 import { Candidato, Cargo, LadoPolitico } from '@/types/candidato';
-import { CandidateCard } from '@/components/CandidateCard';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Platform,
+  RefreshControl,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function TelaCandidatos() {
   const [candidatos, setCandidatos] = useState<Candidato[]>([]);
@@ -200,7 +200,7 @@ export default function TelaCandidatos() {
           {listaFiltrada.length} candidato(s) encontrado(s)
         </Text>
         <TouchableOpacity onPress={() => buscarCandidatos(true)}>
-          <Text style={styles.btnSimularErro}>[Testar tela de erro]</Text>
+          <Text style={styles.btnSimularErro}>Busque seu candidato</Text>
         </TouchableOpacity>
       </View>
 

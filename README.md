@@ -52,7 +52,18 @@ Também é possível:
 - Salvar candidatos para acesso offline;
 - Abrir diretamente o simulador de urna com o candidato selecionado.
 
-### 4. Simulador de Urna Eletrônica
+### 4. Mapa Eleitoral Interativo — Minas Gerais
+Mapa vetorial interativo com todos os **853 municípios** de Minas Gerais, permitindo acompanhar a distribuição de votos por cidade.
+
+**Recursos disponíveis:**
+- Renderização vetorial com `react-native-svg` e projeção cartográfica `d3-geo` (`geoMercator`);
+- Gestos de pinça para zoom, arrasto para navegação e botões de controle (`+`, `-` e reset);
+- Filtro por cargo (**Governador**, **Presidente** e **Senador**);
+- Coloração automática de cada município conforme o partido líder na cidade;
+- Busca rápida por município e atalhos para cidades destaque (Belo Horizonte, Uberlândia, Contagem, Juiz de Fora e Montes Claros);
+- Painel com os candidatos mais votados e total de votos na cidade selecionada.
+
+### 5. Simulador de Urna Eletrônica
 Simulador interativo inspirado na urna eletrônica utilizada pelo TSE/TRE-MG.
 
 **Recursos disponíveis:**
@@ -78,7 +89,7 @@ Simulador interativo inspirado na urna eletrônica utilizada pelo TSE/TRE-MG.
 
 Os votos simulados são armazenados localmente e totalizados no dispositivo, com opção de zerésima para reiniciar os registros.
 
-### 5. Minha Cola Eleitoral — Offline
+### 6. Minha Cola Eleitoral — Offline
 Permite que o eleitor organize os candidatos que deseja consultar durante sua preparação para a votação.
 
 - Armazenamento local via AsyncStorage;
@@ -100,10 +111,12 @@ Permite que o eleitor organize os candidatos que deseja consultar durante sua pr
 | Expo Router | 58 | Navegação baseada em arquivos |
 | TypeScript | 6 | Tipagem estática |
 | AsyncStorage | 2.2.0 | Armazenamento local |
+| React Native SVG | 15.16.0 | Renderização vetorial do mapa |
+| d3-geo | 3.1.2 | Projeção cartográfica (GeoJSON) |
 | Expo Vector Icons | 15 | Ícones da aplicação |
 | Safe Area Context | 5.11 | Gerenciamento de áreas seguras |
 
-### APIs e serviços externos
+### APIs, dados e serviços externos
 
 **Eleições.dev**
 
@@ -111,9 +124,14 @@ API utilizada para consultar informações eleitorais e dados de candidatos prov
 
 Documentação e acesso: https://api.eleicoes.dev
 
-**wsrv.nl**
+**Dados Geográficos e Votação Municipal (IBGE / TSE)**
 
-Proxy de imagens utilizado para permitir a renderização de fotografias hospedadas nos servidores do TSE, contornando restrições relacionadas ao cabeçalho `Content-Disposition: attachment`.
+- `src/data/mgMunicipios.json`: Malha municipal em GeoJSON dos 853 municípios de MG (IBGE).
+- `src/data/votosPorCidadeMG.json`: Votação consolidada por município e cargo (TSE).
+
+**Fotos dos Candidatos (Local + Proxy TSE)**
+
+- `src/data/fotosCandidatos.ts` e `src/components/CandidateImage.tsx`: Mapeamento local de fotos com fallback automático via API route (`src/app/api/foto-tse+api.ts`) e iniciais do candidato.
 
 ---
 
@@ -123,6 +141,13 @@ Proxy de imagens utilizado para permitir a renderização de fotografias hospeda
 voto-minas/
 │
 ├── .env
+├── .env.example
+│
+├── scripts/
+│   ├── baixar-mapa-mg.js
+│   ├── gerar-fotos.js
+│   ├── gerar-votos-cidades.js
+│   └── test-audit.js
 │
 ├── src/
 │   ├── app/
@@ -132,8 +157,12 @@ voto-minas/
 │   │   │   ├── _layout.tsx
 │   │   │   ├── index.tsx
 │   │   │   ├── candidatos.tsx
+│   │   │   ├── mapa.tsx
 │   │   │   ├── urna.tsx
 │   │   │   └── favoritos.tsx
+│   │   │
+│   │   ├── api/
+│   │   │   └── foto-tse+api.ts
 │   │   │
 │   │   └── candidato/
 │   │       └── [id].tsx
@@ -141,7 +170,14 @@ voto-minas/
 │   ├── components/
 │   │   ├── Badge.tsx
 │   │   ├── CandidateCard.tsx
+│   │   ├── CandidateImage.tsx
 │   │   └── UrnaTeclado.tsx
+│   │
+│   ├── data/
+│   │   ├── candidatosFallback.ts
+│   │   ├── fotosCandidatos.ts
+│   │   ├── mgMunicipios.json
+│   │   └── votosPorCidadeMG.json
 │   │
 │   ├── services/
 │   │   ├── api.ts
@@ -172,7 +208,7 @@ Antes de começar, certifique-se de possuir:
 Clone o repositório e acesse a pasta do projeto:
 
 ```bash
-git https://github.com/Taglii/app-votos-minas.git
+git clone https://github.com/Taglii/app-votos-minas.git
 cd voto-minas
 ```
 

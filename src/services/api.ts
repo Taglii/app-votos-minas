@@ -15,9 +15,6 @@ const API_KEY =
 let cacheCandidatos: Candidato[] | null = null;
 let cachePartidos: Record<string, string> | null = null;
 
-// Cabeçalhos de autenticação para a api.eleicoes.dev
-// Nota: 'x-api-key' foi removido porque o servidor da API não o inclui no Access-Control-Allow-Headers,
-// o que causava bloqueio por CORS no navegador Web. O Bearer token é aceito perfeitamente.
 const obterHeaders = (): Record<string, string> => ({
   Accept: 'application/json',
   Authorization: `Bearer ${API_KEY}`,

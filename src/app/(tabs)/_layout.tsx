@@ -1,14 +1,26 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { Platform, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabsLayout() {
+  const insets = useSafeAreaInsets();
+
+  // Garante um respiro mínimo de 10px caso o celular não tenha barra virtual (ex: botões físicos)
+  const bottomPadding = Math.max(insets.bottom, 10);
+
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: '#C8102E', // Vermelho representativo de Minas Gerais
         tabBarInactiveTintColor: '#6B7280',
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            height: 56 + bottomPadding, // 56px de conteúdo + espaço exato da barra do sistema
+            paddingBottom: bottomPadding,
+          },
+        ],
         tabBarLabelStyle: styles.tabBarLabel,
         headerStyle: styles.header,
         headerTintColor: '#FFFFFF',
@@ -95,8 +107,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopColor: '#E5E7EB',
     borderTopWidth: 1,
-    height: Platform.OS === 'ios' ? 86 : 64,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 10,
     paddingTop: 8,
     elevation: 8,
     shadowColor: '#000000',
